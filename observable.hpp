@@ -13,7 +13,12 @@
 
 namespace observer {
 
-template<typename Tag, typename CbFunc>
+/** observable base class
+ * @tparam CbFunc function signature.
+ * @tparam Tag Useful when interfaces have distinct semantics
+ * but function signatures are common.
+ */
+template<typename CbFunc, typename Tag = void>
 struct observable 
 {
   typedef CbFunc callback_signature;
@@ -21,15 +26,24 @@ struct observable
   typedef std::map<void*, callback_class> collection_type;
   typedef std::vector<typename collection_type::key_type> garbage_collection_t; 
 
-  void attach(void *obj_this, callback_class cb)
-  {
-    obs_.insert(std::make_pair(obj_this, cb));  
-  }
+  /** Attach observer to an observable object.
+   * @param address Key to callback object that can be
+   * address of member function's object instance or pointer
+   * to a free function.
+   * @param cb Callback object.
+   * @remark The address is only for indexing storage of callback
+   * objects.
+   */
+  void attach(void *address, callback_class cb)
+  { obs_.insert(std::make_pair(address, cb)); }
 
-  void detach(void *obj_this)
-  {
-    obs_.erase(obj_this);  
-  }
+  /** Detach observer from an observable object.
+   * @param address Key to callback object that can be
+   * address of member function's object instance or pointer
+   * to a free function.
+   */
+  void detach(void *address)
+  {  obs_.erase(address); }
 
   void wipe_dead_observers()
   {

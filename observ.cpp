@@ -8,11 +8,11 @@
 using namespace observer;
 
 struct meta;
-typedef observable<meta, void(std::string const&)>
+typedef observable<void(std::string const&), meta>
 meta_observable;
 
 struct input;
-typedef observable<input, void(char const*, size_t)>
+typedef observable<void(char const*, size_t), input>
 input_observable;
 
 struct simple_observer
