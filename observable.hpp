@@ -45,6 +45,11 @@ struct observable
   void detach(void *address)
   {  obs_.erase(address); }
 
+  /** Wipe(detach) dead observers.
+   * @detail This method only detaches dead observers discovered
+   * during notify(). If dead observers were never notified, then
+   * this method is unable to detach them.
+   */
   void wipe_dead_observers()
   {
     for(typename garbage_collection_t::iterator i = trash_.begin();
