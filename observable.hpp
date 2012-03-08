@@ -7,7 +7,7 @@
 #include <boost/mpl/inherit_linearly.hpp>
 #include <boost/mpl/inherit.hpp>
 #include <boost/mpl/vector.hpp>
-#include "bind_weak_ptr.hpp"
+#include "bind_weak_ptr.hpp" /* boost ticket #810 */
 #include <map>
 #include <vector>
 
