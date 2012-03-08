@@ -18,6 +18,8 @@ input_observable;
 struct simple_observer
 : boost::enable_shared_from_this<simple_observer>
 {
+  using boost::enable_shared_from_this<simple_observer>::shared_from_this;
+
   simple_observer()
   : state("state")
   {}
@@ -26,7 +28,7 @@ struct simple_observer
   { std::cout<<"simple_observer is deleted\n"; }
 
   void 
-  on_input(char const* tr_chunk, size_t byte_off)
+  on_input(char const* data, size_t byte_off)
   {}
 
   void 
@@ -62,12 +64,13 @@ int main()
   {
     shared_ptr<simple_observer> so1(new simple_observer);
     s.meta_observable::attach(&*so1, bind(&simple_observer::on_meta, weak_ptr<simple_observer>(so1), _1));
-    // destruct so1 without detach, it is safe when using shared_ptr
-    // though, this casues lifetime of observers be extened.
+    // At this movement, we are destructing so1 without detaching it, 
+    // it is safe when using shared_ptr.
+    // Though, this casues lifetime of observers to be extended.
     // Therefore, you can see I used weak_ptr to pass the pointer so that
-    // prevent from calling dead observers via upgrading weak_ptr to
-    // shared_ptr. 
+    // prevent from calling dead observers.
   }
+
   s.meta_observable::notify("test");
   
   cout<<"attached observers: "<<
