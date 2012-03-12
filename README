@@ -1,10 +1,10 @@
 Intro:
 
   'observable' is a HEADER ONLY C++ implementation of observer design pattern.
-  It provides a generic observable subject that enables uses decouple callback 
-  interfaces from their concrete subjects. Such idea is mainly inspired by an
-  article written by Herb Sutter that appered in Dr. Dobb's, 2003 [link]
-  (http://drdobbs.com/184403873).
+  It provides a generic observable subject that enables users decouple 
+  callback interfaces from their concrete subjects. Such idea is mainly 
+  inspired by an article written by Herb Sutter that appered in Dr. Dobb's, 
+  2003 [link](http://drdobbs.com/184403873).
 
 Requirement:
 
