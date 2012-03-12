@@ -7,11 +7,11 @@
 
 using namespace observer;
 
-struct meta;
+struct meta{};
 typedef observable<void(std::string const&), meta>
 meta_observable;
 
-struct input;
+struct input{};
 typedef observable<void(char const*, size_t), input>
 input_observable;
 

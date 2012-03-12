@@ -11,6 +11,10 @@
 #include <map>
 #include <vector>
 
+#ifdef TRACE_NOTIFICATION_
+#include <cstdio>
+#endif
+
 namespace observer {
 
 /** observable base class
@@ -62,8 +66,16 @@ struct observable
   get_observers() const
   { return obs_; }
 
+#ifdef TRACE_NOTIFICATION_
+  #define PRINT_NOTIFY \
+  printf("%s: %s is notified\n", typeid(Tag).name(), typeid(CbFunc).name())
+#else
+  #define PRINT_NOTIFY 
+#endif
+
 #define NOTIFY_IMPL_BEGIN \
   typedef typename collection_type::const_iterator iter_t; \
+  PRINT_NOTIFY; \
   for(iter_t Iter = obs_.begin(); Iter != obs_.end(); ++Iter){ \
     try{ \
       (Iter->second) /* place argument list here */
@@ -217,6 +229,8 @@ struct make_observable
     FuncVector,
     mpl::inherit<mpl::_1, helper<mpl::_2> >
   >::type base;
+
+  typedef FuncVector function_vector;
 };
 
 } // namespace observer
