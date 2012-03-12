@@ -50,7 +50,16 @@ void free_function(std::string const &obj_name)
 struct mySubject
 : make_observable< 
     vector<meta_observable, input_observable> >::base
-{};
+{
+  virtual ~mySubject(){ }  
+};
+
+struct derivedSubject
+: mySubject
+{
+  ~derivedSubject()
+  { printf("derived deleted\n"); }
+};
 
 int main()
 {
@@ -59,8 +68,11 @@ int main()
 
   simple_observer so;
   mySubject s;
+  mySubject *d = new derivedSubject;
+  
   s.meta_observable::attach(&so, bind(&simple_observer::on_meta, &so, _1));
   s.meta_observable::attach((void*)&free_function, bind(&free_function,_1));
+  d->meta_observable::attach(&so, bind(&simple_observer::on_meta, &so, _1));
   {
     shared_ptr<simple_observer> so1(new simple_observer);
     s.meta_observable::attach(&*so1, bind(&simple_observer::on_meta, weak_ptr<simple_observer>(so1), _1));
@@ -76,7 +88,8 @@ int main()
   // detection of dead observers if one expects all observers are
   // alive.
   s.meta_observable::notify("test");
-  
+  d->meta_observable::notify("yoyo");
+  delete d;
   cout<<"attached observers: "<<
     s.meta_observable::get_observers().size()<<"\n";
   
