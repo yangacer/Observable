@@ -29,6 +29,8 @@ struct observable
   typedef boost::function<CbFunc> callback_class;
   typedef std::map<void*, callback_class> collection_type;
   typedef std::vector<typename collection_type::key_type> garbage_collection_t; 
+  
+  virtual ~observable(){}
 
   /** Attach observer to an observable object.
    * @param address Key to callback object that can be

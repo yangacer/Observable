@@ -65,17 +65,27 @@ int main()
     shared_ptr<simple_observer> so1(new simple_observer);
     s.meta_observable::attach(&*so1, bind(&simple_observer::on_meta, weak_ptr<simple_observer>(so1), _1));
     // At this movement, we are destructing so1 without detaching it, 
-    // it is safe when using shared_ptr.
-    // Though, this casues lifetime of observers to be extended.
-    // Therefore, you can see I used weak_ptr to pass the pointer so that
-    // prevent from calling dead observers.
+    // it is safe if we pass shared_ptr to the bind(). Though, this 
+    // casues lifetime of observers to be extended. Since I do not 
+    // expect the observer keep alive after I disposed it. As you can
+    // see, I used weak_ptr to pass the pointer. The obsevable 
+    // template class can internally prevent to call dead observers.
   }
 
+  // Other than notify(), one can use unsafe_notify() that ignores
+  // detection of dead observers if one expects all observers are
+  // alive.
   s.meta_observable::notify("test");
   
   cout<<"attached observers: "<<
     s.meta_observable::get_observers().size()<<"\n";
   
+  // Although the observable class can notify alive observers only,
+  // dead observers' exist in a observable subject. One can manually
+  // wipe(detach) these zombies.
+  // XXX Actually, we can have a safe version of notify() which
+  // collects and wipe dead observers automatically. However, this 
+  // introduces more burden to notify().
   s.meta_observable::wipe_dead_observers();
 
   cout<<"attached observers after wiped: "<<
