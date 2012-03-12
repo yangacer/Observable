@@ -42,4 +42,8 @@ Trace notifications:
 
     ./your_prog | c++filt
     meta: void ()(std::string const&) is notified
-    
+
+Contributors:
+
+  bind_weak_ptr: Alexander Kuzmenko and Dmytro Gokun.
+
