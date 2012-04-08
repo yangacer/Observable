@@ -94,11 +94,11 @@ int main()
     s.meta_observable::get_observers().size()<<"\n";
   
   // Although the observable class can notify alive observers only,
-  // dead observers' exist in a observable subject. One can manually
-  // wipe(detach) these zombies.
+  // dead observers still exist in a observable subject. One 
+  // can manually wipe(detach) these zombies.
   // XXX Actually, we can have a safe version of notify() which
   // collects and wipe dead observers automatically. However, this 
-  // introduces more burden to notify().
+  // burden the notify() performance.
   s.meta_observable::wipe_dead_observers();
 
   cout<<"attached observers after wiped: "<<
