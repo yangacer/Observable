@@ -1,7 +1,7 @@
 Intro:
 
   'observable' is a HEADER ONLY C++ implementation of observer design pattern.
-  It provides a generic observable subject that enables users decouple 
+  It provides a generic observable subject that enables users to decouple 
   callback interfaces from their concrete subjects. Such idea is mainly 
   inspired by an article written by Herb Sutter that appered in Dr. Dobb's, 
   2003 [link](http://drdobbs.com/184403873).
@@ -46,8 +46,8 @@ Trace notifications:
 Functions of reference arguments:
   
   Since observable<Func>::notify(...) is a generic function, a well known 
-  problem can happen when the Func has argument of reference type, e.g. 
-  void(X&). That is, when you write
+  problem - perfect forwarding - can happen when the Func has argument 
+  of reference type, e.g. void(X&). That is, when you write
     
     X x;
     observable<void(X&)>::notify(x);
@@ -59,7 +59,7 @@ Functions of reference arguments:
 
   Note that the interface of Func is also changed. Or, you can just pass
   pointers instead of reference. This issue will be vanished within appear 
-  of std::forward in C++0x.
+  of rvalue reference in C++0x.
 
 Contributors:
 
