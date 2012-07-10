@@ -104,7 +104,7 @@ int main()
   cout<<"Num of observers attached to mySubject: "<<
     s.meta_observable::get_observers().size()<<"\n";
   
-  cout<<"Do detach.\n";
+  cout<<"Do detach (obs_inner, free_function).\n";
   s.meta_observable::detach(handle);
   s.meta_observable::detach(handle2);
 
