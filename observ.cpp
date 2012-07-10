@@ -81,13 +81,13 @@ int main()
   s.meta_observable::notify("test");
   d->meta_observable::notify("yoyo");
   delete d;
-  cout<<"Num of observers attached to simple_observer: "<<
+  cout<<"Num of observers attached to mySubject: "<<
     s.meta_observable::get_observers().size()<<"\n";
   
   cout<<"Do detach.\n";
   s.meta_observable::detach(handle);
 
-  cout<<"Num of observers attached to simple_observer: "<<
+  cout<<"Num of observers attached to mySubject: "<<
     s.meta_observable::get_observers().size()<<"\n";
 
   return 0;
