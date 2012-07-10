@@ -85,14 +85,14 @@ int main()
   
   so.state = "obs_outter";
 
-  handle = s.meta_observable::attach(&simple_observer::on_meta, &so, _1);
+  handle = s.meta_observable::attach_mem_fn(&simple_observer::on_meta, &so, _1);
   s.meta_observable::attach(&free_function, _1);
-  d->meta_observable::attach(&simple_observer::on_meta, &so, _1);
+  d->meta_observable::attach_mem_fn(&simple_observer::on_meta, &so, _1);
 
   {
     shared_ptr<simple_observer> sp(new simple_observer);
     sp->state = "obs_inner";
-    handle2 = s.meta_observable::attach(&simple_observer::on_meta, sp, _1);
+    handle2 = s.meta_observable::attach_mem_fn(&simple_observer::on_meta, sp, _1);
     cout<<"Num of observers attached to mySubject: "<<
       s.meta_observable::get_observers().size()<<"\n";
   }

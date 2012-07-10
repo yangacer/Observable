@@ -4,6 +4,7 @@
 #include <memory>
 #include <cstring>
 #include <functional>
+#include <type_traits>
 #include <string>
 #include <boost/mpl/inherit_linearly.hpp>
 #include <boost/mpl/inherit.hpp>
@@ -38,8 +39,12 @@ struct observable
    */
 
   template<typename FuncPtr, typename ...Proto>
-  handle_t attach(FuncPtr fptr, Proto&&... prototype)
+  handle_t attach(FuncPtr fptr, Proto&&... proto)
   {
+    static_assert( 
+      !std::is_member_function_pointer<FuncPtr>::value,
+      "Use attach_mem_fn() to attach member functions");
+
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpmf-conversions"
@@ -51,7 +56,39 @@ struct observable
     obs_.insert(
       std::make_pair(
         addr,
-        std::bind(fptr, std::forward<Proto>(prototype)...)
+        std::bind(fptr, std::forward<Proto>(proto)...)
+        )
+      );
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+    return addr;
+  }
+
+  template<typename MemFuncPtr, typename Inst, typename ...Proto>
+  handle_t attach_mem_fn(MemFuncPtr fptr, Inst&& inst, Proto&&... proto)
+  {
+    static_assert( 
+      std::is_member_function_pointer<MemFuncPtr>::value,
+      "Use attach() to attach free functions");
+
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpmf-conversions"
+#endif
+    uint8_t const ptr_size(sizeof(MemFuncPtr)+sizeof(Inst));
+    char ptr_val[ptr_size+1];
+    std::memcpy(ptr_val, (void*)fptr, ptr_size);
+    handle_t addr(ptr_val, ptr_size);
+
+    obs_.insert(
+      std::make_pair(
+        addr,
+        std::bind(
+          fptr, 
+          std::forward<Inst>(inst), 
+          std::forward<Proto>(proto)...
+          )
         )
       );
 #ifdef __GNUC__
