@@ -20,7 +20,7 @@ namespace observer {
   typedef std::string handle_t;
 
   struct redundant_observer : std::exception {};
-
+  
 /** observable base class
  * @tparam CbFunc function signature.
  * @tparam Tag Useful when interfaces have distinct semantics
@@ -83,9 +83,10 @@ struct observable
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpmf-conversions"
 #endif
-    uint8_t const ptr_size(sizeof(MemFuncPtr)+sizeof(Inst));
+    uint8_t const ptr_size(sizeof(MemFuncPtr)+sizeof(void*));
     char ptr_val[ptr_size+1];
-    std::memcpy(ptr_val, (void*)fptr, ptr_size);
+    std::memcpy(ptr_val, (void*)fptr, sizeof(MemFuncPtr));
+    std::memcpy(ptr_val + sizeof(MemFuncPtr), &*inst, sizeof(void*));
     handle_t addr(ptr_val, ptr_size);
 
     auto rt = obs_.insert(
