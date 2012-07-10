@@ -49,11 +49,13 @@ struct observable
   template<typename FuncPtr, typename ...Proto>
   address_t attach(FuncPtr fptr, Proto&&... prototype)
   {
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpmf-conversions"
+#endif
     char ptr_val[sizeof(FuncPtr)+1];
     std::memcpy(ptr_val, (void*)fptr, sizeof(FuncPtr));
     address_t addr(ptr_val, sizeof(FuncPtr));
-    
-    printf("%d\n", addr.size());
 
     obs_.insert(
       std::make_pair(
@@ -61,6 +63,9 @@ struct observable
         std::bind(fptr, std::forward<Proto>(prototype)...)
         )
       );
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
     return addr;
   }
 
