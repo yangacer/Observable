@@ -93,6 +93,8 @@ int main()
     shared_ptr<simple_observer> sp(new simple_observer);
     sp->state = "obs_inner";
     handle2 = s.meta_observable::attach(&simple_observer::on_meta, sp, _1);
+    cout<<"Num of observers attached to mySubject: "<<
+      s.meta_observable::get_observers().size()<<"\n";
   }
 
   s.meta_observable::notify("test");
