@@ -44,6 +44,8 @@ Trace notifications:
     ./your_prog | c++filt
     meta: void ()(std::string const&) is notified
 
+  Note: Your c++filt may not recognize names created in C++11 style.
+
 Contributors:
 
   bind_weak_ptr: Alexander Kuzmenko and Dmytro Gokun.
