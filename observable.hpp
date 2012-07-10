@@ -10,6 +10,7 @@
 #include <boost/mpl/inherit.hpp>
 #include <boost/mpl/vector.hpp>
 #include <map>
+#include <exception>
 
 #ifdef TRACE_NOTIFICATION_
 #include <cstdio>
@@ -17,6 +18,8 @@
 
 namespace observer {
   typedef std::string handle_t;
+
+  struct redundant_observer : std::exception {};
 
 /** observable base class
  * @tparam CbFunc function signature.
@@ -53,12 +56,16 @@ struct observable
     std::memcpy(ptr_val, (void*)fptr, sizeof(FuncPtr));
     handle_t addr(ptr_val, sizeof(FuncPtr));
 
-    obs_.insert(
+    auto rt = obs_.insert(
       std::make_pair(
         addr,
         std::bind(fptr, std::forward<Proto>(proto)...)
         )
       );
+
+    if(!rt.second)
+      throw redundant_observer(); 
+
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
 #endif
@@ -81,7 +88,7 @@ struct observable
     std::memcpy(ptr_val, (void*)fptr, ptr_size);
     handle_t addr(ptr_val, ptr_size);
 
-    obs_.insert(
+    auto rt = obs_.insert(
       std::make_pair(
         addr,
         std::bind(
@@ -91,6 +98,10 @@ struct observable
           )
         )
       );
+    
+    if(!rt.second)
+      throw redundant_observer(); 
+
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
 #endif
