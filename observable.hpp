@@ -5,8 +5,10 @@
 //#include <boost/function.hpp>
 //#include <boost/function_equal.hpp>
 #include <memory>
+#include <cstring>
 #include <functional>
 #include <type_traits>
+#include <string>
 #include <boost/mpl/inherit_linearly.hpp>
 #include <boost/mpl/inherit.hpp>
 #include <boost/mpl/vector.hpp>
@@ -19,7 +21,7 @@
 #endif
 
 namespace observer {
-  typedef void* address_t;
+  typedef std::string address_t;
 
 /** observable base class
  * @tparam CbFunc function signature.
@@ -47,11 +49,12 @@ struct observable
   template<typename FuncPtr, typename ...Proto>
   address_t attach(FuncPtr fptr, Proto&&... prototype)
   {
-    static_assert(
-      sizeof(address_t) >= sizeof(FuncPtr),
-      "address_t is too small");
+    char ptr_val[sizeof(FuncPtr)+1];
+    std::memcpy(ptr_val, (void*)fptr, sizeof(FuncPtr));
+    address_t addr(ptr_val, sizeof(FuncPtr));
+    
+    printf("%d\n", addr.size());
 
-    address_t addr = reinterpret_cast<address_t>(fptr);
     obs_.insert(
       std::make_pair(
         addr,
