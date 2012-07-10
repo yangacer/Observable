@@ -78,8 +78,6 @@ struct observable
   #define PRINT_NOTIFY 
 #endif
 
-  // XXX Limitation: const reference semantic can not be deduced
-  // from template parameter without c++0x
   void notify() const
   {
     PRINT_NOTIFY; 
@@ -96,7 +94,12 @@ struct observable
   }
 
 protected:
-  ~observable(){}
+  ~observable()
+  {
+#ifdef TRACE_NOTIFICATION_
+    printf("observer %s is terminated\n", typeid(Tag).name());
+#endif
+  }
 
   collection_type obs_;
 
