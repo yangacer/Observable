@@ -68,28 +68,27 @@ int main()
 {
   using namespace std;
   using namespace std::placeholders; 
-  address_t handle;
+  handle_t handle;
 
   simple_observer so;
   mySubject s;
   mySubject *d = new derivedSubject;
   
-  
-  //s.meta_observable::attach(&so, bind(&simple_observer::on_meta, &so, _1));
-  //s.meta_observable::attach((void*)&free_function, bind(&free_function, _1));
   handle = s.meta_observable::attach(&simple_observer::on_meta, &so, _1);
   s.meta_observable::attach(&free_function, _1);
   d->meta_observable::attach(&simple_observer::on_meta, &so, _1);
-  
 
-  // Other than notify(), one can use unsafe_notify() that ignores
-  // detection of dead observers if one expects all observers are
-  // alive.
   s.meta_observable::notify("test");
   d->meta_observable::notify("yoyo");
   delete d;
-  cout<<"attached observers: "<<
+  cout<<"Num of observers attached to simple_observer: "<<
     s.meta_observable::get_observers().size()<<"\n";
   
+  cout<<"Do detach.\n";
+  s.meta_observable::detach(handle);
+
+  cout<<"Num of observers attached to simple_observer: "<<
+    s.meta_observable::get_observers().size()<<"\n";
+
   return 0;
 }

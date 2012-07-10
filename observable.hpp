@@ -1,18 +1,13 @@
 #ifndef OBSERVABLE_HPP_
 #define OBSERVABLE_HPP_
 
-//#include <boost/shared_ptr.hpp>
-//#include <boost/function.hpp>
-//#include <boost/function_equal.hpp>
 #include <memory>
 #include <cstring>
 #include <functional>
-#include <type_traits>
 #include <string>
 #include <boost/mpl/inherit_linearly.hpp>
 #include <boost/mpl/inherit.hpp>
 #include <boost/mpl/vector.hpp>
-//#include "bind_weak_ptr.hpp" /* boost ticket #810 */
 #include <map>
 #include <vector>
 
@@ -21,7 +16,7 @@
 #endif
 
 namespace observer {
-  typedef std::string address_t;
+  typedef std::string handle_t;
 
 /** observable base class
  * @tparam CbFunc function signature.
@@ -33,21 +28,18 @@ struct observable
 {
   typedef CbFunc callback_signature;
   typedef std::function<CbFunc> callback_class;
-  typedef std::map<address_t, callback_class> collection_type;
+  typedef std::map<handle_t, callback_class> collection_type;
   
   /** Attach observer to an observable object.
-   * @param address Key to callback object that can be
-   * address of member function's object instance or pointer
-   * to a free function.
-   * @param cb Callback object.
-   * @remark The address is only for indexing storage of callback
-   * objects.
+   * @param fptr Function pointer or member function pointer.
+   * @param prototype Function prototype.
+   * @return Handle for detaching a registered observer.
+   * @remark If the fptr is a member function pointer, the second parameter 
+   * will be a pointer to an object instance.
    */
-  //void attach(void *address, callback_class cb)
-  //{ obs_.insert(std::make_pair(address, cb)); }
 
   template<typename FuncPtr, typename ...Proto>
-  address_t attach(FuncPtr fptr, Proto&&... prototype)
+  handle_t attach(FuncPtr fptr, Proto&&... prototype)
   {
 #ifdef __GNUC__
 #pragma GCC diagnostic push
@@ -55,7 +47,7 @@ struct observable
 #endif
     char ptr_val[sizeof(FuncPtr)+1];
     std::memcpy(ptr_val, (void*)fptr, sizeof(FuncPtr));
-    address_t addr(ptr_val, sizeof(FuncPtr));
+    handle_t addr(ptr_val, sizeof(FuncPtr));
 
     obs_.insert(
       std::make_pair(
@@ -70,12 +62,10 @@ struct observable
   }
 
   /** Detach observer from an observable object.
-   * @param address Key to callback object that can be
-   * address of member function's object instance or pointer
-   * to a free function.
+   * @param hdl Handle was returned by attach(...).
    */
-  void detach(address_t address)
-  {  obs_.erase(address); }
+  void detach(handle_t hdl)
+  {  obs_.erase(hdl); }
 
   collection_type const&
   get_observers() const
