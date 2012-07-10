@@ -123,7 +123,7 @@ namespace boost
             #   define INVOKE_N ((*sp_).*mp_)(
             #endif // BOOST_NO_VOID_RETURNS
 
-            weak_ptr_functor(const boost::weak_ptr<T> &wp, M mp)
+            weak_ptr_functor(const boost::weak_ptr<T> &&wp, M mp)
                 : sp_(wp.lock()), mp_(mp)
             {
                 if (!sp_)
@@ -160,10 +160,9 @@ namespace boost
         class weak_ptr_proxy
         { 
         public: 
-            weak_ptr_proxy(const boost::weak_ptr<T> &wp) 
+            weak_ptr_proxy(const boost::weak_ptr<T> &&wp) 
                 : wp_(wp) 
-            { 
-            } 
+            {} 
 
             // 0
             template <typename R>
