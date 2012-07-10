@@ -9,6 +9,7 @@ Intro:
 Requirement:
 
   boost 1.45+
+  compilers support C++11
 
 Example:
 
@@ -42,24 +43,6 @@ Trace notifications:
 
     ./your_prog | c++filt
     meta: void ()(std::string const&) is notified
-
-Functions of reference arguments:
-  
-  Since observable<Func>::notify(...) is a generic function, a well known 
-  problem - perfect forwarding - can happen when the Func has argument 
-  of reference type, e.g. void(X&). That is, when you write
-    
-    X x;
-    observable<void(X&)>::notify(x);
-
-  It is actually pass x by 'value' but not reference. A workround is use
-  boost::ref to wrap the argument. i.e. 
-
-    observable<void(boost::reference_wrapper<X>)>::notify(boost::ref(x));
-
-  Note that the interface of Func is also changed. Or, you can just pass
-  pointers instead of reference. This issue will be vanished within appear 
-  of rvalue reference in C++0x.
 
 Contributors:
 
