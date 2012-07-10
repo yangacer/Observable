@@ -9,7 +9,6 @@
 #include <boost/mpl/inherit.hpp>
 #include <boost/mpl/vector.hpp>
 #include <map>
-#include <vector>
 
 #ifdef TRACE_NOTIFICATION_
 #include <cstdio>
@@ -81,16 +80,16 @@ struct observable
   void notify() const
   {
     PRINT_NOTIFY; 
-    for(auto Iter = obs_.begin(); Iter != obs_.end(); ++Iter)
-      (Iter->second)();
+    for(auto iter = obs_.begin(); iter != obs_.end(); ++iter)
+      (iter->second)();
   }
   
   template<typename ...Args>
   void notify(Args&&... param) const
   {
     PRINT_NOTIFY; 
-    for(auto Iter = obs_.begin(); Iter != obs_.end(); ++Iter)
-        (Iter->second)(std::forward<Args>(param)...);
+    for(auto iter = obs_.begin(); iter != obs_.end(); ++iter)
+        (iter->second)(std::forward<Args>(param)...);
   }
 
 protected:
