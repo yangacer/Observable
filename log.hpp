@@ -13,18 +13,36 @@
   { \
     return DEMANGLE_BY_TYPE(decltype(*this)); \
   }
-
-#define OBSERVER_TRACKING_INVOKE_(FnName) \
+// TODO replace cout with a static ostream reference
+#define OBSERVER_TRACKING_SUBJECT_INVOKE_BEGIN_ \
   { \
-    std::cout << "@log:" << '"' << get_notifer_info_() << "\" -> \"" << \
-      DEMANGLE_BY_NAME(FnName) << "\"\n"; \
+    std::cerr << "@log:" << '"' << get_notifer_info_() << "\" -> \"" ; \
   }
-  
+
+#define OBSERVER_TRACKING_SUBJECT_INVOKE_END_ \
+  { \
+    std::cerr << " [label=\"" << \
+    DEMANGLE_BY_TYPE(decltype(*this)) << "\"];\n"; \
+  }
+
+#define OBSERVER_TRACKING_OBSERVER_MEM_FN_INVOKED \
+  { \
+    std::cerr << DEMANGLE_BY_TYPE(decltype(*this)) << "::" <<\
+    __FUNCTION__ << '"'; \
+  }
+
+#define OBSERVER_TRACKING_OBSERVER_FN_INVOKED \
+  { \
+    std::cerr <<  __FUNCTION__ << '"'; \
+  }
+
 #else // OBSERVER_ENABLE_TRACKING
 
 #define OBSERVER_INSTALL_LOG_REQUIRED_INTERFACE_ 
-
-#define OBSERVER_TRACKING_INVOKE_(Observer) {}
+#define OBSERVER_TRACKING_SUBJECT_INVOKE_BEGIN 
+#define OBSERVER_TRACKING_SUBJECT_INVOKE_END_
+#define OBSERVER_TRACKING_OBSERVER_MEM_FN_INVOKED
+#define OBSERVER_TRACKING_OBSERVER_FN_INVOKED 
 
 #endif // OBSERVER_ENABLE_TRACKING
 

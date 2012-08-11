@@ -48,13 +48,15 @@ struct simple_observer
   on_meta(std::string const &obj_name)
   {
     using namespace std;
-    cout<<"simple_observer: "<<obj_name<<":"<<state<<"\n";
+    OBSERVER_TRACKING_OBSERVER_MEM_FN_INVOKED;
+    //cout<<"simple_observer: "<<obj_name<<":"<<state<<"\n";
   }
   
   void
   on_named(std::string const &obj_name)
   {
-    std::cout << obj_name << "\n";
+    OBSERVER_TRACKING_OBSERVER_MEM_FN_INVOKED;
+    //std::cout << obj_name << "\n";
   }
 
   std::string state;
@@ -62,7 +64,9 @@ struct simple_observer
 
 void free_function(std::string const &obj_name)
 {
-  std::cout<<"free_function: "<<obj_name<<"\n";
+  OBSERVER_TRACKING_OBSERVER_FN_INVOKED;
+
+  //std::cout<<"free_function: "<<obj_name<<"\n";
 }
 
 struct mySubject

@@ -127,8 +127,9 @@ struct observable
   void notify() const
   {
     for(auto iter = obs_.begin(); iter != obs_.end(); ++iter){
-      OBSERVER_TRACKING_INVOKE_(std::get<1>(*iter).target_type().name());
+      OBSERVER_TRACKING_SUBJECT_INVOKE_BEGIN_;
       std::get<1>(*iter)();
+      OBSERVER_TRACKING_SUBJECT_INVOKE_END_;
     }
   }
   
@@ -136,8 +137,9 @@ struct observable
   void notify(Args&&... param) const
   {
     for(auto iter = obs_.begin(); iter != obs_.end(); ++iter){
-      OBSERVER_TRACKING_INVOKE_(std::get<1>(*iter).target_type().name());
+      OBSERVER_TRACKING_SUBJECT_INVOKE_BEGIN_;
       std::get<1>(*iter)(std::forward<Args>(param)...);
+      OBSERVER_TRACKING_SUBJECT_INVOKE_END_;
     }
   }
 
