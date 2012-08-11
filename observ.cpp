@@ -1,3 +1,4 @@
+#define OBSERVER_ENABLE_TRACKING
 #include "observable.hpp"
 #include <memory>
 #include <functional>
@@ -79,6 +80,9 @@ struct mySubject
   }
 
   virtual ~mySubject(){ }  
+
+  OBSERVER_INSTALL_LOG_REQUIRED_INTERFACE_
+
 };
 
 struct derivedSubject
@@ -86,6 +90,8 @@ struct derivedSubject
 {
   ~derivedSubject()
   { printf("derived deleted\n"); }
+
+  OBSERVER_INSTALL_LOG_REQUIRED_INTERFACE_
 };
 
 int main()

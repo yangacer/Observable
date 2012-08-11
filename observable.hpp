@@ -13,37 +13,10 @@
 #include <exception>
 #include <memory>
 
-#if defined(__GNUC__) && !defined(__clang__)
-#define OBSERVER_IS_GNUC_
-#else
-#undef OBSERVER_IS_GNUC_
-#endif 
+#include "compat.hpp"
 
-#ifdef OBSERVER_ENABLE_TRACKING_
-#include <iostream>
-#include <cstdio>
-
-#ifdef OBSERVER_IS_GNUC_
-#include <cxxabi.h>
-
-template<typename T>
-struct getname
-{
-  std::string operator()()
-  { 
-    int status(-4);
-    std::shared_ptr<char> res(abi::__cxa_demangle(typeid(T).name(), 0, 0, &status));
-    return (res) ? res.get() : typeid(T).name();
-  }
-};
-
-#define DEMANGLE(Type) getname<Type>()() 
-
-#else // OBSERVER_IS_GUNC_
-// TODO demangle in other compilers?
-#define DEMANGLE(Type) typeid(Type).name()
-#endif 
-
+#ifdef OBSERVER_ENABLE_TRACKING
+#include "log.hpp"
 #endif // OBSERVER_ENABLE_TRACKING_
 
 
@@ -97,13 +70,6 @@ struct observable
 #pragma GCC diagnostic pop
 #endif
 
-#ifdef OBSERVER_ENABLE_TRACKING_
-    std::cout << "@" << DEMANGLE(decltype(*this)) << 
-      "[" << DEMANGLE(Tag) << "]: " ;
-    //detail::print_every_4_bits(addr);
-    std::cout << " " << DEMANGLE(FuncPtr) << "\n" ;
-#endif
-
     return addr;
   }
 
@@ -137,13 +103,6 @@ struct observable
 #pragma GCC diagnostic pop
 #endif
 
-#ifdef OBSERVER_ENABLE_TRACKING_
-    std::cout << "@" << DEMANGLE(decltype(*this)) << 
-      "[" << DEMANGLE(Tag) << "]: " ;
-    //detail::print_every_4_bits(addr);
-    std::cout << " " << DEMANGLE(MemFuncPtr) << "\n" ;
-#endif
-
     return addr;
   }
    
@@ -165,36 +124,38 @@ struct observable
   get_observers() const
   { return obs_; }
 
-#ifdef TRACE_NOTIFICATION_
-  #define PRINT_NOTIFY \
-  printf("%s: %s is notified\n", typeid(Tag).name(), typeid(CbFunc).name())
-#else
-  #define PRINT_NOTIFY 
-#endif
+  // For logging
+  OBSERVER_INSTALL_LOG_REQUIRED_INTERFACE_
 
   void notify() const
   {
-    PRINT_NOTIFY; 
-    for(auto iter = obs_.begin(); iter != obs_.end(); ++iter)
+    for(auto iter = obs_.begin(); iter != obs_.end(); ++iter){
+      OBSERVER_TRACKING_INVOKE_(std::get<1>(*iter).target_type().name());
       std::get<1>(*iter)();
+    }
   }
   
   template<typename ...Args>
   void notify(Args&&... param) const
   {
-    PRINT_NOTIFY; 
-    for(auto iter = obs_.begin(); iter != obs_.end(); ++iter)
+    for(auto iter = obs_.begin(); iter != obs_.end(); ++iter){
+      OBSERVER_TRACKING_INVOKE_(std::get<1>(*iter).target_type().name());
       std::get<1>(*iter)(std::forward<Args>(param)...);
+    }
   }
 
 protected:
   ~observable()
+  {}
+  
+#ifdef OBSERVER_ENABLE_TRACKING_
+  virtual std::string 
+  get_notifer_info() const
   {
-#ifdef TRACE_NOTIFICATION_
-    printf("observer %s is terminated\n", typeid(Tag).name());
-#endif
+    return  
   }
-   
+#endif // OBSERVER_ENABLE_TRACKING_
+
   collection_type obs_;
 
 };
