@@ -9,18 +9,50 @@
 #include <boost/mpl/inherit_linearly.hpp>
 #include <boost/mpl/inherit.hpp>
 #include <boost/mpl/vector.hpp>
-#include <map>
+#include <vector>
 #include <exception>
+#include <memory>
 
-#ifdef TRACE_NOTIFICATION_
+#if defined(__GNUC__) && !defined(__clang__)
+#define OBSERVER_IS_GNUC_
+#else
+#undef OBSERVER_IS_GNUC_
+#endif 
+
+#ifdef OBSERVER_ENABLE_TRACKING_
+#include <iostream>
 #include <cstdio>
-#endif
+
+#ifdef OBSERVER_IS_GNUC_
+#include <cxxabi.h>
+
+template<typename T>
+struct getname
+{
+  std::string operator()()
+  { 
+    int status(-4);
+    std::shared_ptr<char> res(abi::__cxa_demangle(typeid(T).name(), 0, 0, &status));
+    return (res) ? res.get() : typeid(T).name();
+  }
+};
+
+#define DEMANGLE(Type) getname<Type>()() 
+
+#else // OBSERVER_IS_GUNC_
+// TODO demangle in other compilers?
+#define DEMANGLE(Type) typeid(Type).name()
+#endif 
+
+#endif // OBSERVER_ENABLE_TRACKING_
+
 
 namespace observer {
-  typedef std::string handle_t;
+namespace detail {
+  void print_every_4_bits(std::string const& encoded);
+} // namespace detail
+typedef std::string handle_t;
 
-  struct redundant_observer : std::exception {};
-  
 /** observable base class
  * @tparam CbFunc function signature.
  * @tparam Tag Useful when interfaces have distinct semantics
@@ -31,7 +63,7 @@ struct observable
 {
   typedef CbFunc callback_signature;
   typedef std::function<CbFunc> callback_class;
-  typedef std::map<handle_t, callback_class> collection_type;
+  typedef std::vector<std::tuple<handle_t, callback_class> > collection_type;
   
   /** Attach observer to an observable object.
    * @param fptr Function pointer or member function pointer.
@@ -48,7 +80,7 @@ struct observable
       !std::is_member_function_pointer<FuncPtr>::value,
       "Use attach_mem_fn() to attach member functions");
 
-#ifdef __GNUC__
+#ifdef OBSERVER_IS_GNUC_
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpmf-conversions"
 #endif
@@ -56,19 +88,22 @@ struct observable
     std::memcpy(ptr_val, (void*)fptr, sizeof(FuncPtr));
     handle_t addr(ptr_val, sizeof(FuncPtr));
 
-    auto rt = obs_.insert(
-      std::make_pair(
+    obs_.emplace_back(
         addr,
         std::bind(fptr, std::forward<Proto>(proto)...)
-        )
       );
 
-    if(!rt.second)
-      throw redundant_observer(); 
-
-#ifdef __GNUC__
+#ifdef OBSERVER_IS_GNUC_
 #pragma GCC diagnostic pop
 #endif
+
+#ifdef OBSERVER_ENABLE_TRACKING_
+    std::cout << "@" << DEMANGLE(decltype(*this)) << 
+      "[" << DEMANGLE(Tag) << "]: " ;
+    //detail::print_every_4_bits(addr);
+    std::cout << " " << DEMANGLE(FuncPtr) << "\n" ;
+#endif
+
     return addr;
   }
 
@@ -79,7 +114,7 @@ struct observable
       std::is_member_function_pointer<MemFuncPtr>::value,
       "Use attach() to attach free functions");
 
-#ifdef __GNUC__
+#ifdef OBSERVER_IS_GNUC_
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpmf-conversions"
 #endif
@@ -89,31 +124,42 @@ struct observable
     std::memcpy(ptr_val + sizeof(MemFuncPtr), &*inst, sizeof(void*));
     handle_t addr(ptr_val, ptr_size);
 
-    auto rt = obs_.insert(
-      std::make_pair(
+    obs_.emplace_back(
         addr,
         std::bind(
           fptr, 
           std::forward<Inst>(inst), 
           std::forward<Proto>(proto)...
           )
-        )
       );
     
-    if(!rt.second)
-      throw redundant_observer(); 
-
-#ifdef __GNUC__
+#ifdef OBSERVER_IS_GNUC_
 #pragma GCC diagnostic pop
 #endif
+
+#ifdef OBSERVER_ENABLE_TRACKING_
+    std::cout << "@" << DEMANGLE(decltype(*this)) << 
+      "[" << DEMANGLE(Tag) << "]: " ;
+    //detail::print_every_4_bits(addr);
+    std::cout << " " << DEMANGLE(MemFuncPtr) << "\n" ;
+#endif
+
     return addr;
   }
-
+   
   /** Detach observer from an observable object.
    * @param hdl Handle was returned by attach(...).
    */
-  void detach(handle_t hdl)
-  {  obs_.erase(hdl); }
+  void detach(handle_t const &hdl)
+  {
+    auto i = obs_.begin();
+    while(i < obs_.end()){
+      // remove all matched
+      if(hdl == std::get<0>(*i))
+        i = obs_.erase(i);
+      ++i;
+    }
+  }
 
   collection_type const&
   get_observers() const
@@ -130,7 +176,7 @@ struct observable
   {
     PRINT_NOTIFY; 
     for(auto iter = obs_.begin(); iter != obs_.end(); ++iter)
-      (iter->second)();
+      std::get<1>(*iter)();
   }
   
   template<typename ...Args>
@@ -138,7 +184,7 @@ struct observable
   {
     PRINT_NOTIFY; 
     for(auto iter = obs_.begin(); iter != obs_.end(); ++iter)
-        (iter->second)(std::forward<Args>(param)...);
+      std::get<1>(*iter)(std::forward<Args>(param)...);
   }
 
 protected:
@@ -148,7 +194,7 @@ protected:
     printf("observer %s is terminated\n", typeid(Tag).name());
 #endif
   }
-
+   
   collection_type obs_;
 
 };
@@ -181,6 +227,14 @@ struct make_observable
 
   typedef FuncVector function_vector;
 };
+
+namespace detail {
+  void print_every_4_bits(std::string const& encoded)
+  {
+    for(auto i = encoded.begin(); i != encoded.end(); ++i)
+      printf("%02x", *i);
+  }
+} // namespace detail
 
 } // namespace observer
 

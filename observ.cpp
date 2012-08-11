@@ -10,6 +10,9 @@ struct meta{};
 typedef observable<void(std::string const&), meta>
 meta_observable;
 
+typedef observable<void(std::string const&)>
+named_observable;
+
 struct input{};
 typedef observable<void(char const*, size_t), input>
 input_observable;
@@ -46,6 +49,12 @@ struct simple_observer
     using namespace std;
     cout<<"simple_observer: "<<obj_name<<":"<<state<<"\n";
   }
+  
+  void
+  on_named(std::string const &obj_name)
+  {
+    std::cout << obj_name << "\n";
+  }
 
   std::string state;
 };
@@ -59,10 +68,16 @@ struct mySubject
 : make_observable< 
     vector<
       meta_observable, 
-      input_observable
+      input_observable,
+      named_observable
     > 
   >::base
 {
+  void name_it()
+  {
+    named_observable::notify("Named!!");
+  }
+
   virtual ~mySubject(){ }  
 };
 
@@ -107,6 +122,9 @@ int main()
   cout<<"Do detach.\n";
   s.meta_observable::detach(handle);
   s.meta_observable::detach(handle2);
+  
+  s.named_observable::attach_mem_fn(&simple_observer::on_named, &so, _1);
+  s.name_it();
 
   cout<<"Num of observers attached to mySubject: "<<
     s.meta_observable::get_observers().size()<<"\n";

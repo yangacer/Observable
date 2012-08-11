@@ -1,1 +1,1 @@
--I../ -I/usr/local/include
+-I../ -I/opt/include -std=c++0x
