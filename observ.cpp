@@ -1,4 +1,4 @@
-#define OBSERVER_ENABLE_TRACKING
+//#define OBSERVER_ENABLE_TRACKING
 #include "observable.hpp"
 #include <memory>
 #include <functional>
