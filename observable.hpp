@@ -14,10 +14,7 @@
 #include <memory>
 
 #include "compat.hpp"
-
-#ifdef OBSERVER_ENABLE_TRACKING
 #include "log.hpp"
-#endif // OBSERVER_ENABLE_TRACKING_
 
 
 namespace observer {

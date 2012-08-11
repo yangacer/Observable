@@ -13,6 +13,7 @@
   { \
     return DEMANGLE_BY_TYPE(decltype(*this)); \
   }
+
 #define OBSERVER_TRACKING_INVOKE_(FnName) \
   { \
     std::cout << "@log:" << '"' << get_notifer_info_() << "\" -> \"" << \
@@ -22,7 +23,8 @@
 #else // OBSERVER_ENABLE_TRACKING
 
 #define OBSERVER_INSTALL_LOG_REQUIRED_INTERFACE_ 
-#define OBSERVER_TRACKING_INVOKE_(Observer)
+
+#define OBSERVER_TRACKING_INVOKE_(Observer) {}
 
 #endif // OBSERVER_ENABLE_TRACKING
 
