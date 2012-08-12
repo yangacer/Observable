@@ -12,9 +12,13 @@ struct logger
   logger();
   void set(std::ostream &os);
   std::ostream &get();
+  void start();
+  void add_timestamp();
+
   static logger &singleton();
 private:
   std::ostream *os_;
+  std::chrono::time_point<std::chrono::high_resolution_clock> start_;
 };
 
 
@@ -32,9 +36,9 @@ private:
 
 #define OBSERVER_TRACKING_SUBJECT_INVOKE_END_ \
     auto dur = std::chrono::high_resolution_clock::now() - t1; \
-    logger::singleton().get() << " [label=\"" << \
-    std::chrono::duration_cast<std::chrono::milliseconds>(dur).count() \
-      << "ms\"];\n"; 
+    logger::singleton().get() << " [label=\"";  \
+    logger::singleton().add_timestamp(); \
+    logger::singleton().get() << "\"];\n"; 
 
 #define OBSERVER_TRACKING_OBSERVER_MEM_FN_INVOKED \
   { \
