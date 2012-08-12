@@ -3,8 +3,20 @@
 
 #include <string>
 #include <typeinfo>
-#include <iostream>
+#include <ostream>
+#include <chrono>
 #include "compat.hpp"
+
+struct logger
+{
+  logger();
+  void set(std::ostream &os);
+  std::ostream &get();
+  static logger &singleton();
+private:
+  std::ostream *os_;
+};
+
 
 #ifdef OBSERVER_ENABLE_TRACKING
 
@@ -13,27 +25,26 @@
   { \
     return DEMANGLE_BY_TYPE(decltype(*this)); \
   }
-// TODO replace cout with a static ostream reference
+
 #define OBSERVER_TRACKING_SUBJECT_INVOKE_BEGIN_ \
-  { \
-    std::cerr << "@log:" << '"' << get_notifer_info_() << "\" -> \"" ; \
-  }
+    auto t1 = std::chrono::high_resolution_clock::now(); \
+    logger::singleton().get() << "@obs:" << '"' << get_notifer_info_() << "\" -- \"" ; \
 
 #define OBSERVER_TRACKING_SUBJECT_INVOKE_END_ \
-  { \
-    std::cerr << " [label=\"" << \
-    DEMANGLE_BY_TYPE(decltype(*this)) << "\"];\n"; \
-  }
+    auto dur = std::chrono::high_resolution_clock::now() - t1; \
+    logger::singleton().get() << " [label=\"" << \
+    std::chrono::duration_cast<std::chrono::milliseconds>(dur).count() \
+      << "ms\"];\n"; 
 
 #define OBSERVER_TRACKING_OBSERVER_MEM_FN_INVOKED \
   { \
-    std::cerr << DEMANGLE_BY_TYPE(decltype(*this)) << "::" <<\
+    logger::singleton().get() << DEMANGLE_BY_TYPE(decltype(*this)) << "::" <<\
     __FUNCTION__ << '"'; \
   }
 
 #define OBSERVER_TRACKING_OBSERVER_FN_INVOKED \
   { \
-    std::cerr <<  __FUNCTION__ << '"'; \
+    logger::singleton().get() <<  __FUNCTION__ << '"'; \
   }
 
 #else // OBSERVER_ENABLE_TRACKING
