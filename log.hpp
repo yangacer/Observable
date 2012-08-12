@@ -1,28 +1,61 @@
 #ifndef OBSERVER_LOG_HPP_
 #define OBSERVER_LOG_HPP_
 
+#ifdef OBSERVER_ENABLE_TRACKING
+
 #include <string>
 #include <typeinfo>
 #include <ostream>
 #include <chrono>
+#include <iomanip>
 #include "compat.hpp"
 
 struct logger
 {
-  logger();
-  std::ostream &set(std::ostream &os);
-  std::ostream &get();
-  std::ostream &start();
-  std::ostream &add_timestamp();
+  logger()
+  {
+    start();
+  }
 
-  static logger &singleton();
+  std::ostream &set(std::ostream &os)
+  {
+    os_ = &os; 
+    return *os_;
+  }
+
+  std::ostream &get()
+  {
+    return *os_;
+  }
+
+  std::ostream &start()
+  {
+    start_ = std::chrono::high_resolution_clock::now();
+    return *os_;
+  }
+
+  std::ostream &add_timestamp()
+  {
+    using namespace std::chrono;
+    auto dur = 
+      (duration_cast<milliseconds>(system_clock::now() - start_).count());
+
+    (*os_) << dur/1000 << "."  << std::setw(3) << std::setfill('0') << dur%1000 ;
+
+    return *os_;
+
+  }
+
+  static logger &singleton()
+  {
+    static logger inst;
+    return inst;
+  }
 private:
   std::ostream *os_;
   std::chrono::time_point<std::chrono::system_clock> start_;
 };
 
-
-#ifdef OBSERVER_ENABLE_TRACKING
 
 #define OBSERVER_INSTALL_LOG_REQUIRED_INTERFACE_ \
   virtual std::string get_notifer_info_() const \

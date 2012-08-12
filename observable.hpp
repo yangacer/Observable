@@ -18,9 +18,7 @@
 
 
 namespace observer {
-namespace detail {
-  void print_every_4_bits(std::string const& encoded);
-} // namespace detail
+
 typedef std::string handle_t;
 
 /** observable base class
@@ -123,17 +121,7 @@ struct observable
 
   // For logging
   OBSERVER_INSTALL_LOG_REQUIRED_INTERFACE_
-
-  /*
-  void notify() const
-  {
-    for(auto iter = obs_.begin(); iter != obs_.end(); ++iter){
-      OBSERVER_TRACKING_SUBJECT_INVOKE_BEGIN_;
-      std::get<1>(*iter)();
-      OBSERVER_TRACKING_SUBJECT_INVOKE_END_;
-    }
-  }
-  */
+  
   template<typename ...Args>
   void notify(Args&&... param) const
   {
@@ -188,14 +176,6 @@ struct make_observable
 
   typedef FuncVector function_vector;
 };
-
-namespace detail {
-  void print_every_4_bits(std::string const& encoded)
-  {
-    for(auto i = encoded.begin(); i != encoded.end(); ++i)
-      printf("%02x", *i);
-  }
-} // namespace detail
 
 } // namespace observer
 
