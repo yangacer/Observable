@@ -31,11 +31,9 @@ private:
   }
 
 #define OBSERVER_TRACKING_SUBJECT_INVOKE_BEGIN_ \
-    auto t1 = std::chrono::high_resolution_clock::now(); \
     logger::singleton().get() << "@obs:" << '"' << get_notifer_info_() << "\" -- \"" ; \
 
 #define OBSERVER_TRACKING_SUBJECT_INVOKE_END_ \
-    auto dur = std::chrono::high_resolution_clock::now() - t1; \
     logger::singleton().get() << " [label=\"";  \
     logger::singleton().add_timestamp(); \
     logger::singleton().get() << "\"];\n"; 
