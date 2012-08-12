@@ -12,6 +12,8 @@ struct meta{};
 typedef observable<void(std::string const&), meta>
 meta_observable;
 
+typedef observable<void()> void_observable;
+
 typedef observable<void(std::string const&)>
 named_observable;
 
@@ -61,6 +63,12 @@ struct simple_observer
     std::cout << obj_name << "\n";
   }
 
+  void
+  on_void()
+  {
+    OBSERVER_TRACKING_OBSERVER_MEM_FN_INVOKED;
+  }
+
   std::string state;
 };
 
@@ -76,7 +84,8 @@ struct mySubject
     vector<
       meta_observable, 
       input_observable,
-      named_observable
+      named_observable,
+      void_observable
     > 
   >::base
 {
@@ -118,6 +127,7 @@ int main()
 
   handle = s.meta_observable::attach_mem_fn(&simple_observer::on_meta, &so, _1);
   s.meta_observable::attach(&free_function, _1);
+  s.void_observable::attach_mem_fn(&simple_observer::on_void, &so);
   d->meta_observable::attach_mem_fn(&simple_observer::on_meta, &so, _1);
 
   {
@@ -129,9 +139,11 @@ int main()
   }
 
   s.meta_observable::notify("test");
+  s.void_observable::notify();
   d->meta_observable::notify("yoyo");
   delete d;
   
+
   cout<<"Num of observers attached to mySubject: "<<
     s.meta_observable::get_observers().size()<<"\n";
   

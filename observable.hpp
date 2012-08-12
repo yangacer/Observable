@@ -124,6 +124,7 @@ struct observable
   // For logging
   OBSERVER_INSTALL_LOG_REQUIRED_INTERFACE_
 
+  /*
   void notify() const
   {
     for(auto iter = obs_.begin(); iter != obs_.end(); ++iter){
@@ -132,7 +133,7 @@ struct observable
       OBSERVER_TRACKING_SUBJECT_INVOKE_END_;
     }
   }
-  
+  */
   template<typename ...Args>
   void notify(Args&&... param) const
   {

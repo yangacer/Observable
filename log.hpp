@@ -10,15 +10,15 @@
 struct logger
 {
   logger();
-  void set(std::ostream &os);
+  std::ostream &set(std::ostream &os);
   std::ostream &get();
-  void start();
-  void add_timestamp();
+  std::ostream &start();
+  std::ostream &add_timestamp();
 
   static logger &singleton();
 private:
   std::ostream *os_;
-  std::chrono::time_point<std::chrono::high_resolution_clock> start_;
+  std::chrono::time_point<std::chrono::system_clock> start_;
 };
 
 
@@ -31,16 +31,18 @@ private:
   }
 
 #define OBSERVER_TRACKING_SUBJECT_INVOKE_BEGIN_ \
-    logger::singleton().get() << "@obs:" << '"' << get_notifer_info_() << "\" -- \"" ; \
+    logger::singleton().get() << "@obs: ["; \
+    logger::singleton().add_timestamp() << "] " << \
+      '"' << get_notifer_info_() << "\" -- " ;
 
 #define OBSERVER_TRACKING_SUBJECT_INVOKE_END_ \
-    logger::singleton().get() << " [label=\"";  \
-    logger::singleton().add_timestamp(); \
-    logger::singleton().get() << "\"];\n"; 
+    logger::singleton().get() << " [" ; \
+    logger::singleton().add_timestamp() << \
+      "];\n"; 
 
 #define OBSERVER_TRACKING_OBSERVER_MEM_FN_INVOKED \
   { \
-    logger::singleton().get() << DEMANGLE_BY_TYPE(decltype(*this)) << "::" <<\
+    logger::singleton().get() << '"' << DEMANGLE_BY_TYPE(decltype(*this)) << "::" <<\
     __FUNCTION__ << '"'; \
   }
 
