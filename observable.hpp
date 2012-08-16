@@ -23,24 +23,26 @@ typedef std::string handle_t;
 
 /** observable base class
  * @tparam CbFunc function signature.
- * @tparam Tag Useful when interfaces have distinct semantics
- * but function signatures are common.
+ * @tparam Tag Useful when interfaces have distinct semantics of a 
+ * common function signature.
  */
 template<typename CbFunc, typename Tag = void>
 struct observable 
 {
   typedef CbFunc callback_signature;
   typedef std::function<CbFunc> callback_class;
-  typedef std::vector<std::tuple<handle_t, callback_class> > collection_type;
-  
-  /** Attach observer to an observable object.
-   * @param fptr Function pointer or member function pointer.
-   * @param prototype Function prototype.
-   * @return Handle for detaching a registered observer.
-   * @remark If the fptr is a member function pointer, the second parameter 
-   * will be a pointer to an object instance.
-   */
 
+#ifdef MAKE_DOC
+  typedef implementation_defined collection_type;
+#else
+  typedef std::vector<std::tuple<handle_t, callback_class> > collection_type;
+#endif // MAKE_DOC
+
+  /** Attach observer to an observable object.
+   * @param fptr Function pointer.
+   * @param prototype Argument list.
+   * @return Handle for detaching a registered observer.
+   */
   template<typename FuncPtr, typename ...Proto>
   handle_t attach(FuncPtr fptr, Proto&&... proto)
   {
@@ -68,6 +70,12 @@ struct observable
     return addr;
   }
 
+  /** Attach observer to an observable object.
+   * @param fptr Member function pointer.
+   * @param inst Object instance
+   * @param prototype Argument list.
+   * @return Handle for detaching a registered observer.
+   */
   template<typename MemFuncPtr, typename Inst, typename ...Proto>
   handle_t attach_mem_fn(MemFuncPtr fptr, Inst&& inst, Proto&&... proto)
   {
@@ -101,7 +109,7 @@ struct observable
     return addr;
   }
    
-  /** Detach observer from an observable object.
+  /** Detach observer.
    * @param hdl Handle was returned by attach(...).
    */
   void detach(handle_t const &hdl)
@@ -115,12 +123,16 @@ struct observable
     }
   }
   
+  /** Detach the front observer. */
   void detach_front()
   {
     if(!obs_.empty())
       obs_.erase(obs_.begin());
   }
 
+  /** Detach the first observer matches a given handl.
+   *  @param hdl Handle of observer.
+   */
   void detach_first(handle_t const &hdl)
   {
     for(auto i = obs_.begin(); i != obs_.end(); ++i){
@@ -131,6 +143,9 @@ struct observable
     }
   }
 
+  /** Get container of observers.
+   *  @return collection_type.
+   */
   collection_type const&
   get_observers() const
   { return obs_; }
