@@ -8,7 +8,7 @@ Intro:
 
 Requirement:
 
-  boost 1.45+
+  boost 1.50+
   compilers support C++11
 
 Example:
@@ -16,35 +16,68 @@ Example:
   observ.cpp
 
 Trace notifications:
-
-  Define 'TRACE_NOTIFICATION_' when compiling your code to enable tracing mode.
-
-    e.g. g++ [-I/usr/local/include] -DTRACE_NOTIFICATION_ observ.cpp
   
-  Then you can get messages from stdout whenever a notification is made. The 
-  observable class internally uses typeid to print name of a tag type. Thus, to
-  use the tracing facility, one has to make the tag type as a complete type. 
-  That is,
+  Define 'OBSERVER_ENABLE_TRACKING' before include observable.hpp to enable tracing mode.
 
-    struct meta{}; // OK, complete tag type.
-    typedef observable<void(), meta> meta_observable;
-    
-    struct input; // Incomplete tag type, OK for non tracing mode
-                  // but compile error in tracing enabled mode.
+  To obtain meaningful tracking message, clients' subject class have to add a defined macro. i.e.
 
-  Besides, you may need a tool to translate the names outputed in tracing mode 
-  due to the naming convension among compilers. In case of GNU C++ compiler,
-  one can use 'c++filt' to achive this.
+  class subject 
+  : observable<void()>
+  {
+    OBSERVER_INSTALL_LOG_REQUIRED_INTERFACE_
 
-  e.g. 
+    subject();
+    // ...
+  };
+
+  Besides, two macros are required to be installed to clients' observer, i.e.
+
+  class observer
+  {
+    void on_notified()
+    {
+      // Member function observer
+      OBSERVER_TRACKING_OBSERVER_MEM_FN_INVOKED;
+    }
+  };
+
+  void on_notified()
+  {
+    OBSERVER_TRACKING_OBSERVER_FN_INVOKED;
+  }
   
-    ./your_prog
-    4meta: FvRKSsE is notified
+  The first macro add a virtual function to obtain name of the most derived class. That is,
+  a subject class.
 
-    ./your_prog | c++filt
-    meta: void ()(std::string const&) is notified
+  Last two macors are used to obtain function name (via __FUNCTION__)
+  If there are other tricks to do this without insertion of clients' code, 
+  please let me know.
 
-  Note: Your c++filt may not recognize names created in C++11 style.
+  By default, tracking messages are outputed to std::cin. One can configure other
+  std::ostream to change such default behavior like this:
+
+  std::stringstream log;
+  logger::singleton().set(log);
+  logger::singleton().start();  // Optionally. You can call this method whenever you 
+                                // like to reset start time.
+
+  Here are log messages of compiled 'observ.cpp'.
+
+  @obs: [0.000] "mySubject" -- "simple_observer::on_meta" [1.000];
+  @obs: [1.000] "mySubject" -- free_function" [1.000];
+  @obs: [1.000] "mySubject" -- "simple_observer::on_meta" [2.001];
+  @obs: [2.001] "mySubject" -- "simple_observer::on_void" [2.001];
+  @obs: [2.001] "derivedSubject" -- "simple_observer::on_meta" [3.001];
+  @obs: [3.001] "mySubject" -- "simple_observer::on_named" [3.001];
+  
+  The format is as follows:
+  
+  @obs: [n.m] X -- Y [p.q] ;
+
+  @obs    For identify log message.
+  [n.m]   Timestamp(seconds) of entering X. It's clocked since "starting of a logger".
+  X -- Y  Subject X notify observer Y. 
+  [p.q]   Timestamp of leaving Y.
 
 Contributors:
 
