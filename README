@@ -17,44 +17,43 @@ Example:
 
 Trace notifications:
   
-  Define 'OBSERVER_ENABLE_TRACKING' before include observable.hpp to enable tracing mode.
+  1. Define 'OBSERVER_ENABLE_TRACKING' before include observable.hpp to enable tracing mode.
 
-  To obtain meaningful tracking message, clients' subject class have to add a defined macro. i.e.
+  2. Modify subject class, e.g.
 
-  class subject 
-  : observable<void()>
-  {
-    OBSERVER_INSTALL_LOG_REQUIRED_INTERFACE_
+    class subject 
+    : observable<void()>
+    {
+      OBSERVER_INSTALL_LOG_REQUIRED_INTERFACE_
 
-    subject();
-    // ...
-  };
+      subject();
+      // ...
+    };
 
-  Besides, two macros are required to be installed to clients' observer, i.e.
+  3. Modify observer class/function, e.g.
 
-  class observer
-  {
+    class observer
+    {
+      void on_notified()
+      {
+        // Member function observer
+        OBSERVER_TRACKING_OBSERVER_MEM_FN_INVOKED;
+      }
+    };
+
     void on_notified()
     {
-      // Member function observer
-      OBSERVER_TRACKING_OBSERVER_MEM_FN_INVOKED;
+      OBSERVER_TRACKING_OBSERVER_FN_INVOKED;
     }
-  };
-
-  void on_notified()
-  {
-    OBSERVER_TRACKING_OBSERVER_FN_INVOKED;
-  }
   
-  The first macro add a virtual function to obtain name of the most derived class. That is,
+  The first macro add a virtual function to obtain name of the most derived class.a That is,
   a subject class.
 
-  Last two macors are used to obtain function name (via __FUNCTION__)
-  If there are other tricks to do this without insertion of clients' code, 
-  please let me know.
+  Last two macors are used to obtain function name (via __FUNCTION__). If there are other tricks 
+  to do this without insertion of clients' code, please let me know.
 
-  By default, tracking messages are outputed to std::cin. One can configure other
-  std::ostream to change such default behavior like this:
+  By default, tracking messages are outputed to std::cin. One can configure other std::ostream to 
+  change such default behavior, e.g. 
 
   std::stringstream log;
   logger::singleton().set(log);
