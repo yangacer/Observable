@@ -74,8 +74,8 @@ Trace notifications:
   @obs: [n.m] X -- Y [p.q] ;
 
   @obs    For identify log message.
-  [n.m]   Timestamp(seconds) of entering X. It's clocked since "starting of a logger".
-  X -- Y  Subject X notify observer Y. 
+  [n.m]   Timestamp(seconds) of entering Y. It's clocked since "starting of a logger".
+  X -- Y  Subject X notifies observer Y. 
   [p.q]   Timestamp of leaving Y.
 
 Contributors:
