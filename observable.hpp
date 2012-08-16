@@ -121,6 +121,16 @@ struct observable
       obs_.erase(obs_.begin());
   }
 
+  void detach_first(handle_t const &hdl)
+  {
+    for(auto i = obs_.begin(); i != obs_.end(); ++i){
+      if(hdl == std::get<0>(*i)){
+        obs_.erase(i);
+        break;
+      }
+    }
+  }
+
   collection_type const&
   get_observers() const
   { return obs_; }
