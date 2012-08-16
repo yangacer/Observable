@@ -114,6 +114,12 @@ struct observable
       ++i;
     }
   }
+  
+  void detach_front()
+  {
+    if(!obs_.empty())
+      obs_.erase(obs_.begin());
+  }
 
   collection_type const&
   get_observers() const
@@ -128,6 +134,16 @@ struct observable
     for(auto iter = obs_.begin(); iter != obs_.end(); ++iter){
       OBSERVER_TRACKING_SUBJECT_INVOKE_BEGIN_;
       std::get<1>(*iter)(std::forward<Args>(param)...);
+      OBSERVER_TRACKING_SUBJECT_INVOKE_END_;
+    }
+  }
+  
+  template<typename ...Args>
+  void notify_one(Args&&...param) const
+  {
+    if(!obs_.empty()){
+      OBSERVER_TRACKING_SUBJECT_INVOKE_BEGIN_;
+      std::get<1>(obs_.front())(std::forward<Args>(param)...);
       OBSERVER_TRACKING_SUBJECT_INVOKE_END_;
     }
   }
