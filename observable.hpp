@@ -20,7 +20,7 @@ namespace observer {
 /** observable base class
  * @tparam CbFunc function signature.
  * @tparam Tag Useful when interfaces have distinct semantics
- * but function signatures are common.
+ * but within common function signature.
  */
 template<typename CbFunc, typename Tag = void>
 struct observable 
