@@ -177,14 +177,6 @@ protected:
   ~observable()
   {}
   
-#ifdef OBSERVER_ENABLE_TRACKING_
-  virtual std::string 
-  get_notifer_info() const
-  {
-    return  
-  }
-#endif // OBSERVER_ENABLE_TRACKING_
-
   collection_type obs_;
 
 };
