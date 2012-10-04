@@ -149,7 +149,7 @@ int main()
   
   cout<<"Do detach (obs_inner, free_function).\n";
   s.meta_observable::detach(handle);
-  s.meta_observable::detach(handle2);
+  s.meta_observable::detach(&free_function);
   
   s.named_observable::attach_mem_fn(&simple_observer::on_named, &so, _1);
   s.name_it();

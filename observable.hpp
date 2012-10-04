@@ -123,7 +123,7 @@ struct observable
     char ptr_val[sizeof(FuncPtr)+1];
     std::memcpy(ptr_val, (void*)fptr, sizeof(FuncPtr));
     handle_t addr(ptr_val, sizeof(FuncPtr));  
-    obs_.erase(addr);
+    detach(addr);
 #ifdef OBSERVER_IS_GNUC_
 #pragma GCC diagnostic pop
 #endif
@@ -145,7 +145,7 @@ struct observable
     std::memcpy(ptr_val, (void*)fptr, sizeof(MemFuncPtr));
     std::memcpy(ptr_val + sizeof(MemFuncPtr), &*inst, sizeof(void*));
     handle_t addr(ptr_val, ptr_size);
-    obs_.erase(addr);
+    detach(addr);
 #ifdef OBSERVER_IS_GNUC_
 #pragma GCC diagnostic pop
 #endif
