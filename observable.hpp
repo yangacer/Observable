@@ -108,6 +108,11 @@ struct observable
 
     return addr;
   }
+
+  void detach()
+  {
+    obs_.clear();
+  }
    
   /** Detach observer.
    * @param hdl Handle was returned by attach(...).
