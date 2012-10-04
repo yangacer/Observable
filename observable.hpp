@@ -108,8 +108,50 @@ struct observable
 
     return addr;
   }
+  
+  template<typename FuncPtr>
+  void detach(FuncPtr fptr)
+  {
+    static_assert( 
+      !std::is_member_function_pointer<FuncPtr>::value,
+      "Use detach_mem_fn() to detach member functions");
 
-  void detach()
+#ifdef OBSERVER_IS_GNUC_
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpmf-conversions"
+#endif
+    char ptr_val[sizeof(FuncPtr)+1];
+    std::memcpy(ptr_val, (void*)fptr, sizeof(FuncPtr));
+    handle_t addr(ptr_val, sizeof(FuncPtr));  
+    obs_.erase(addr);
+#ifdef OBSERVER_IS_GNUC_
+#pragma GCC diagnostic pop
+#endif
+  }
+
+  template<typename MemFuncPtr, typename Inst>
+  void detach_mem_fn(MemFuncPtr fptr, Inst &&inst)
+  {
+    static_assert( 
+      std::is_member_function_pointer<MemFuncPtr>::value,
+      "Use attach() to attach free functions");
+
+#ifdef OBSERVER_IS_GNUC_
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpmf-conversions"
+#endif
+    uint8_t const ptr_size(sizeof(MemFuncPtr)+sizeof(void*));
+    char ptr_val[ptr_size+1];
+    std::memcpy(ptr_val, (void*)fptr, sizeof(MemFuncPtr));
+    std::memcpy(ptr_val + sizeof(MemFuncPtr), &*inst, sizeof(void*));
+    handle_t addr(ptr_val, ptr_size);
+    obs_.erase(addr);
+#ifdef OBSERVER_IS_GNUC_
+#pragma GCC diagnostic pop
+#endif
+  }
+
+  void detach_all()
   {
     obs_.clear();
   }
