@@ -21,6 +21,15 @@ namespace observer {
 
 typedef std::string handle_t;
 
+namespace detail {
+
+template<
+  typename FuncPtr, bool IsMemFuncPtr, 
+  typename InstOrArg>
+struct get_handle;
+
+} // namespace detail
+
 /** observable base class
  * @tparam CbFunc function signature.
  * @tparam Tag Useful when interfaces have distinct semantics of a 
@@ -43,13 +52,10 @@ struct observable
    * @param prototype Argument list.
    * @return Handle for detaching a registered observer.
    */
-  template<typename FuncPtr, typename ...Proto>
-  handle_t attach(FuncPtr fptr, Proto&&... proto)
+  template<typename FuncPtr>
+  handle_t attach(FuncPtr fptr)
   {
-    static_assert( 
-      !std::is_member_function_pointer<FuncPtr>::value,
-      "Use attach_mem_fn() to attach member functions");
-
+   
 #ifdef OBSERVER_IS_GNUC_
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpmf-conversions"
@@ -60,7 +66,7 @@ struct observable
 
     obs_.emplace_back(
         addr,
-        std::bind(fptr, std::forward<Proto>(proto)...)
+        std::bind(fptr)
       );
 
 #ifdef OBSERVER_IS_GNUC_
@@ -69,46 +75,30 @@ struct observable
 
     return addr;
   }
-
-  /** Attach observer to an observable object.
-   * @param fptr Member function pointer.
-   * @param inst Object instance
-   * @param prototype Argument list.
-   * @return Handle for detaching a registered observer.
-   */
-  template<typename MemFuncPtr, typename Inst, typename ...Proto>
-  handle_t attach_mem_fn(MemFuncPtr fptr, Inst&& inst, Proto&&... proto)
+ 
+  template<typename FuncPtr, typename Inst, typename ...Proto>
+  handle_t attach(FuncPtr fptr, Inst&& inst, Proto&&... proto)
   {
-    static_assert( 
-      std::is_member_function_pointer<MemFuncPtr>::value,
-      "Use attach() to attach free functions");
+    detail::get_handle<
+      FuncPtr, 
+      std::is_member_function_pointer<FuncPtr>::value,
+      Inst
+        > get_handle;
 
-#ifdef OBSERVER_IS_GNUC_
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpmf-conversions"
-#endif
-    uint8_t const ptr_size(sizeof(MemFuncPtr)+sizeof(void*));
-    char ptr_val[ptr_size+1];
-    std::memcpy(ptr_val, (void*)fptr, sizeof(MemFuncPtr));
-    std::memcpy(ptr_val + sizeof(MemFuncPtr), &*inst, sizeof(void*));
-    handle_t addr(ptr_val, ptr_size);
+    handle_t handle = get_handle(
+      fptr, std::forward<Inst>(inst));
 
     obs_.emplace_back(
-        addr,
-        std::bind(
-          fptr, 
-          std::forward<Inst>(inst), 
-          std::forward<Proto>(proto)...
-          )
+      handle,
+      std::bind(
+        fptr, 
+        std::forward<Inst>(inst), 
+        std::forward<Proto>(proto)...
+        )
       );
-    
-#ifdef OBSERVER_IS_GNUC_
-#pragma GCC diagnostic pop
-#endif
-
-    return addr;
+    return handle;
   }
-  
+
   template<typename FuncPtr>
   void detach(FuncPtr fptr)
   {
@@ -256,6 +246,52 @@ struct make_observable
 
   typedef FuncVector function_vector;
 };
+
+namespace detail {
+  
+template<typename FuncPtr, typename InstOrArg>
+struct get_handle<FuncPtr, true, InstOrArg>
+{
+  handle_t operator()(FuncPtr fptr, InstOrArg&& inst)
+  {
+#ifdef OBSERVER_IS_GNUC_
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpmf-conversions"
+#endif
+    uint8_t const ptr_size(sizeof(FuncPtr)+sizeof(void*));
+    char ptr_val[ptr_size+1];
+    std::memcpy(ptr_val, (void*)fptr, sizeof(FuncPtr));
+    std::memcpy(ptr_val + sizeof(FuncPtr), &*inst, sizeof(void*));
+    handle_t addr(ptr_val, ptr_size);
+    
+#ifdef OBSERVER_IS_GNUC_
+#pragma GCC diagnostic pop
+#endif
+    return addr;
+  }
+};
+
+template<typename FuncPtr, typename InstOrArg>
+struct get_handle<FuncPtr, false, InstOrArg>
+{
+  handle_t operator()(FuncPtr fptr, InstOrArg&& inst)
+  {
+#ifdef OBSERVER_IS_GNUC_
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpmf-conversions"
+#endif
+    char ptr_val[sizeof(FuncPtr)+1];
+    std::memcpy(ptr_val, (void*)fptr, sizeof(FuncPtr));
+    handle_t addr(ptr_val, sizeof(FuncPtr));
+#ifdef OBSERVER_IS_GNUC_
+#pragma GCC diagnostic pop
+#endif
+    return addr;
+  }
+};
+
+
+} // namespace detail
 
 } // namespace observer
 
