@@ -47,35 +47,38 @@ struct observable
   typedef std::vector<std::tuple<handle_t, callback_class> > collection_type;
 #endif // MAKE_DOC
 
-  /** Attach observer to an observable object.
+  /** Attach observer to an observable object. Specialize
+   * for no parameter free function.
    * @param fptr Function pointer.
-   * @param prototype Argument list.
    * @return Handle for detaching a registered observer.
    */
   template<typename FuncPtr>
   handle_t attach(FuncPtr fptr)
   {
    
-#ifdef OBSERVER_IS_GNUC_
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpmf-conversions"
-#endif
-    char ptr_val[sizeof(FuncPtr)+1];
-    std::memcpy(ptr_val, (void*)fptr, sizeof(FuncPtr));
-    handle_t addr(ptr_val, sizeof(FuncPtr));
+    detail::get_handle<
+      FuncPtr, 
+      std::is_member_function_pointer<FuncPtr>::value,
+      void*
+        > get_handle;
+
+    handle_t addr = get_handle(fptr, 0);
 
     obs_.emplace_back(
         addr,
         std::bind(fptr)
       );
 
-#ifdef OBSERVER_IS_GNUC_
-#pragma GCC diagnostic pop
-#endif
-
     return addr;
   }
- 
+
+ /** Attach observer to an observable object. Support function and 
+  *  functor which consist of at least one parameter.
+   * @param fptr Function pointer.
+   * @param inst Instance or argument.
+   * @param prototype Argument list.
+   * @return Handle for detaching a registered observer.
+   */
   template<typename FuncPtr, typename Inst, typename ...Proto>
   handle_t attach(FuncPtr fptr, Inst&& inst, Proto&&... proto)
   {
@@ -102,43 +105,25 @@ struct observable
   template<typename FuncPtr>
   void detach(FuncPtr fptr)
   {
-    static_assert( 
-      !std::is_member_function_pointer<FuncPtr>::value,
-      "Use detach_mem_fn() to detach member functions");
+    detail::get_handle<
+      FuncPtr, 
+      std::is_member_function_pointer<FuncPtr>::value,
+      void*
+        > get_handle;
 
-#ifdef OBSERVER_IS_GNUC_
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpmf-conversions"
-#endif
-    char ptr_val[sizeof(FuncPtr)+1];
-    std::memcpy(ptr_val, (void*)fptr, sizeof(FuncPtr));
-    handle_t addr(ptr_val, sizeof(FuncPtr));  
-    detach(addr);
-#ifdef OBSERVER_IS_GNUC_
-#pragma GCC diagnostic pop
-#endif
+    detach(get_handle(fptr, 0));
   }
 
-  template<typename MemFuncPtr, typename Inst>
-  void detach_mem_fn(MemFuncPtr fptr, Inst &&inst)
+  template<typename FuncPtr, typename Inst>
+  void detach(FuncPtr fptr, Inst &&inst)
   {
-    static_assert( 
-      std::is_member_function_pointer<MemFuncPtr>::value,
-      "Use attach() to attach free functions");
+    detail::get_handle<
+      FuncPtr, 
+      std::is_member_function_pointer<FuncPtr>::value,
+      Inst
+        > get_handle;
 
-#ifdef OBSERVER_IS_GNUC_
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpmf-conversions"
-#endif
-    uint8_t const ptr_size(sizeof(MemFuncPtr)+sizeof(void*));
-    char ptr_val[ptr_size+1];
-    std::memcpy(ptr_val, (void*)fptr, sizeof(MemFuncPtr));
-    std::memcpy(ptr_val + sizeof(MemFuncPtr), &*inst, sizeof(void*));
-    handle_t addr(ptr_val, ptr_size);
-    detach(addr);
-#ifdef OBSERVER_IS_GNUC_
-#pragma GCC diagnostic pop
-#endif
+    detach(get_handle(fptr, std::forward<Inst>(inst)));
   }
 
   void detach_all()
@@ -248,7 +233,7 @@ struct make_observable
 };
 
 namespace detail {
-  
+ 
 template<typename FuncPtr, typename InstOrArg>
 struct get_handle<FuncPtr, true, InstOrArg>
 {
